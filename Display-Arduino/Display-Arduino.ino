@@ -8,7 +8,7 @@
 // display
 #define TFT_DC 9
 #define TFT_CS 10
-#define lineHeightPxl 20
+#define lineHeightPxl 16
 
 #define dataLinkRX 2
 #define dataLinkTX 3 
@@ -38,6 +38,18 @@ void setup() {
   tft.begin();
   tft.setRotation(3);
   tft.fillScreen(ILI9341_BLACK);
+  tft.setTextSize(2);
+
+  // print sensor names
+  tft.println("  Temp Bruecke:  ");
+  tft.println("  Temp PFC:      ");
+  tft.println("  Temp MMC:      ");
+  tft.println("  Temp Wasser:   ");
+  tft.println("  Input Strom:   ");
+  tft.println("  Primaerstrom:  ");
+  tft.println("  BUS Spannung:  ");
+  tft.println("  FlowSensor:    ");
+  tft.println("  HTU21D-F:      ");
   
   dataLink.begin(1200);
   
@@ -62,56 +74,15 @@ void loop() {
     
     dataLink.readBytes((char *)data, dataLength);
     
-    // reset screen
-    //tft.fillScreen(ILI9341_BLACK);
-    tft.setCursor(0, 0);
-    tft.setTextSize(2);
-    
     for (int i = 0;  i < numberOfSensors; i++) {
       float * sensorValue = (float *) & data[i * bytesPerSensor];
       
       float val = * sensorValue;
       
-      switch (i) {
-        case 0: // Temp Brücke
-          clearRow(i * lineHeightPxl, lineHeightPxl);
-          tft.println("  Temp Bruecke:  " + floatToDisplayString(val));
-          break;
-        case 1: // Temp PFC
-          clearRow(i * lineHeightPxl, lineHeightPxl);
-          tft.println("  Temp PFC:      " + floatToDisplayString(val));
-          break;
-        case 2: // Temp MMC
-          clearRow(i * lineHeightPxl, lineHeightPxl);
-          tft.println("  Temp MMC:      " + floatToDisplayString(val));
-          break;
-        case 3: // Temp Wasser
-          clearRow(i * lineHeightPxl, lineHeightPxl);
-          tft.println("  Temp Wasser:   " + floatToDisplayString(val));
-          break;
-        case 4: // Eingangsstrom
-          clearRow(i * lineHeightPxl, lineHeightPxl);
-          tft.println("  Input Strom:   " + floatToDisplayString(val));
-          break;
-        case 5: // Primärstrom
-          clearRow(i * lineHeightPxl, lineHeightPxl);
-          tft.println("  Primaerstrom:  " + floatToDisplayString(val));
-          break;
-        case 6: // BUS Spannung
-          clearRow(i * lineHeightPxl, lineHeightPxl);
-          tft.println("  BUS Spannung:  " + floatToDisplayString(val));
-          break;
-        case 7: // FlowSensor
-          clearRow(i * lineHeightPxl, lineHeightPxl);
-          tft.println("  FlowSensor:    " + floatToDisplayString(val));
-          break;
-        case 8: // HTU21D-F
-          clearRow(i * lineHeightPxl, lineHeightPxl);
-          tft.println("  HTU21D-F:      " + floatToDisplayString(val));
-          break;
-        default:
-          break;
-      }
+      int iTimesLineHeight = i * lineHeightPxl;
+      clearRow(iTimesLineHeight, lineHeightPxl);
+      tft.setCursor(190, iTimesLineHeight + 1);
+      tft.println(floatToDisplayString(val));
     }
   }
   
@@ -140,6 +111,6 @@ String floatToDisplayString(float f) {
 
 void clearRow(int y, int height) {
   for (byte i = height - 1; i != 0; i--) {
-    tft.drawFastHLine(200, y + i, 120, ILI9341_BLACK);
+    tft.drawFastHLine(190, y + i, 130, ILI9341_BLACK);
   }
 }
