@@ -73,16 +73,19 @@ void loop() {
     jamTimerSet = false;
     
     dataLink.readBytes((char *)data, dataLength);
-    
     for (int i = 0;  i < numberOfSensors; i++) {
       float * sensorValue = (float *) & data[i * bytesPerSensor];
-      
       float val = * sensorValue;
       
       int iTimesLineHeight = i * lineHeightPxl;
-      clearRow(iTimesLineHeight, lineHeightPxl);
       tft.setCursor(190, iTimesLineHeight + 1);
-      tft.println(floatToDisplayString(val));
+      String s = floatToDisplayString(val);
+      
+      // handle as many tasks as possible before clearing the row
+      //           x    y                 width height         color
+      //           190                    to 130
+      tft.fillRect(190, iTimesLineHeight, 70,   lineHeightPxl, ILI9341_BLACK); // clear row
+      tft.println(s); // write new value
     }
   }
   
@@ -107,10 +110,4 @@ String floatToDisplayString(float f) {
     s = " " + s;
   }
   return s; 
-}
-
-void clearRow(int y, int height) {
-  for (byte i = height - 1; i != 0; i--) {
-    tft.drawFastHLine(190, y + i, 130, ILI9341_BLACK);
-  }
 }
