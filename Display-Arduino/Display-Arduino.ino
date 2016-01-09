@@ -1,3 +1,5 @@
+
+
 #include <SoftwareSerial.h>
 
 // display
@@ -78,6 +80,8 @@ void loop() {
     for (int i = 0;  i < numberOfSensors; i++) {
       float * sensorValue = (float *) & data[i * bytesPerSensor];
       float val = * sensorValue;
+      
+      Serial.println("Sensor " + String(i) + ": " + String(val));
       
       // write only to the screen when values have changed
       if (oldSensorValues[i] != val) {
