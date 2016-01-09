@@ -28,8 +28,9 @@ SoftwareSerial dataLink(dataLinkRX, dataLinkTX); // RX, TX
 /*Adafruit_MCP9808 tempsensor1 = Adafruit_MCP9808();
 Adafruit_MCP9808 tempsensor2 = Adafruit_MCP9808();
 Adafruit_MCP9808 tempsensor3 = Adafruit_MCP9808();
-Adafruit_MCP9808 tempsensor4 = Adafruit_MCP9808();*/
+Adafruit_MCP9808 tempsensor4 = Adafruit_MCP9808();
 
+Adafruit_HTU21DF htu = Adafruit_HTU21DF();*/
 
 // flow sensor
 // The hall-effect flow sensor outputs approximately 4.5 pulses per second per
@@ -58,7 +59,9 @@ void setup() {
   /*tempsensor1.begin(0x18);
   tempsensor2.begin(0x19);
   tempsensor3.begin(0x1A);
-  tempsensor4.begin(0x1B);*/
+  tempsensor4.begin(0x1B);
+  
+  htu.begin(0x1C);*/
   
   // flow sensor
   pinMode(flowSensorPin, INPUT);
@@ -163,8 +166,7 @@ boolean readSensorData() {
         break;
       case 8:
         // HTU21D-F
-        // TODO: read sensor value
-        sensorValue = 0.0f;
+        sensorValue = 444.12; //htu.readHumidity();
         break;
       default: 
         sensorValue = 0.0f;
