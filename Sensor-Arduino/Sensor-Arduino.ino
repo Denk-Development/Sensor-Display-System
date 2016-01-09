@@ -11,8 +11,10 @@
 #define flowSensorInterrupt 0  // 0 = digital pin 2
 #define flowSensorPin 2
 
-#define dataLinkRX 2
-#define dataLinkTX 3
+#define dataLinkRX 3
+#define dataLinkTX 4
+
+#define transmissionInvervall 300
 
 const byte numberOfSensors = 9, bytesPerSensor = 4;
 
@@ -25,12 +27,12 @@ unsigned long lastTransmission = 0;
 SoftwareSerial dataLink(dataLinkRX, dataLinkTX); // RX, TX
 
 // sensors
-/*Adafruit_MCP9808 tempsensor1 = Adafruit_MCP9808();
+Adafruit_MCP9808 tempsensor1 = Adafruit_MCP9808();
 Adafruit_MCP9808 tempsensor2 = Adafruit_MCP9808();
 Adafruit_MCP9808 tempsensor3 = Adafruit_MCP9808();
 Adafruit_MCP9808 tempsensor4 = Adafruit_MCP9808();
 
-Adafruit_HTU21DF htu = Adafruit_HTU21DF();*/
+Adafruit_HTU21DF htu = Adafruit_HTU21DF();
 
 // flow sensor
 // The hall-effect flow sensor outputs approximately 4.5 pulses per second per
@@ -44,8 +46,9 @@ unsigned long oldTimeFlowSensor;
 // end flow sensor
 
 void setup() {
-  dataLink.begin(1200);
-  
+  dataLink.begin(57600);
+  // baud rates 300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 31250, 38400, 57600, 115200
+    
   dataLength = numberOfSensors * bytesPerSensor;
   data = (byte *) malloc(sizeof(byte) * dataLength);
   sensorValue = (byte *) malloc(sizeof(byte) * bytesPerSensor);
@@ -56,12 +59,12 @@ void setup() {
   
   
   // temp sensors
-  /*tempsensor1.begin(0x18);
+  tempsensor1.begin(0x18);
   tempsensor2.begin(0x19);
   tempsensor3.begin(0x1A);
   tempsensor4.begin(0x1B);
   
-  htu.begin(0x1C);*/
+  htu.begin(0x1C);
   
   // flow sensor
   pinMode(flowSensorPin, INPUT);
@@ -80,11 +83,10 @@ void setup() {
 }
 
 void loop() {
-  if ((millis() - lastTransmission) > 1000 && readSensorData()) {
+  if ((millis() - lastTransmission) > transmissionInvervall && readSensorData()) {
     lastTransmission = millis();
     // data has changed
     dataLink.write(data, dataLength);
-    delay(1000); // interval e.g. 1200ms
   }
   
   if((millis() - oldTimeFlowSensor) > 1000)    // Only process counters once per second
@@ -134,19 +136,19 @@ boolean readSensorData() {
     switch(sensor) {
       case 0:
         // Temp Brücke
-        sensorValue = 50;//tempsensor1.readTempC();
+        sensorValue = tempsensor1.readTempC();
         break;
       case 1:
         // Temp PFC
-        sensorValue = 20;//tempsensor2.readTempC();
+        sensorValue = tempsensor2.readTempC();
         break;
       case 2:
         // Temp MMC
-        sensorValue = 122;//tempsensor3.readTempC();
+        sensorValue = tempsensor3.readTempC();
         break;
       case 3:
         // Temp Wasser
-        sensorValue = -1.4;//tempsensor4.readTempC();
+        sensorValue = tempsensor4.readTempC();
         break;
       case 4:
         // Eingangsstrom
@@ -169,7 +171,7 @@ boolean readSensorData() {
         sensorValue = 444.12; //htu.readHumidity();
         break;
       default: 
-        sensorValue = 0.0f;
+        sensorValue = -1.0f;
         break;
     }
     

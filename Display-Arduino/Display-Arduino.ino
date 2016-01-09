@@ -10,8 +10,8 @@
 #define TFT_CS 10
 #define lineHeightPxl 16
 
-#define dataLinkRX 2
-#define dataLinkTX 3 
+#define dataLinkRX 3
+#define dataLinkTX 4 
 #define numberOfSensors 9
 #define bytesPerSensor 4
 
@@ -21,6 +21,7 @@ unsigned long lastPossibleJam = 0;
 boolean jamTimerSet = false;
 
 byte * data;
+float * oldSensorValues = (float *) calloc(sizeof(float), numberOfSensors);
 
 int dataLength, bytesAvailable, bytesAvailableAfterDelay;
 
@@ -41,20 +42,21 @@ void setup() {
   tft.setTextSize(2);
 
   // print sensor names
-  tft.println("  Temp Bruecke:  ");
-  tft.println("  Temp PFC:      ");
-  tft.println("  Temp MMC:      ");
-  tft.println("  Temp Wasser:   ");
-  tft.println("  Input Strom:   ");
-  tft.println("  Primaerstrom:  ");
-  tft.println("  BUS Spannung:  ");
-  tft.println("  FlowSensor:    ");
-  tft.println("  HTU21D-F:      ");
-  
-  dataLink.begin(1200);
+  tft.println("  Temp Bruecke:   0.00");
+  tft.println("  Temp PFC:       0.00");
+  tft.println("  Temp MMC:       0.00");
+  tft.println("  Temp Wasser:    0.00");
+  tft.println("  Input Strom:    0.00");
+  tft.println("  Primaerstrom:   0.00");
+  tft.println("  BUS Spannung:   0.00");
+  tft.println("  FlowSensor:     0.00");
+  tft.println("  HTU21D-F:       0.00");
   
   dataLength = numberOfSensors * bytesPerSensor;
   data = (byte *) malloc(sizeof(byte) * dataLength);
+  
+  dataLink.begin(57600); 
+  // baud rates 300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 31250, 38400, 57600, 115200
 }
 
 void loop() {
@@ -77,15 +79,20 @@ void loop() {
       float * sensorValue = (float *) & data[i * bytesPerSensor];
       float val = * sensorValue;
       
-      int iTimesLineHeight = i * lineHeightPxl;
-      tft.setCursor(190, iTimesLineHeight + 1);
-      String s = floatToDisplayString(val);
-      
-      // handle as many tasks as possible before clearing the row
-      //           x    y                 width height         color
-      //           190                    to 130
-      tft.fillRect(190, iTimesLineHeight, 70,   lineHeightPxl, ILI9341_BLACK); // clear row
-      tft.println(s); // write new value
+      // write only to the screen when values have changed
+      if (oldSensorValues[i] != val) {
+        int iTimesLineHeight = i * lineHeightPxl;
+        tft.setCursor(192, iTimesLineHeight + 1);
+        String s = floatToDisplayString(val);
+        
+        // handle as many tasks as possible before clearing the row
+        //           x    y                 width height         color
+        //           190                    to 130
+        tft.fillRect(192, iTimesLineHeight, 78,   lineHeightPxl, ILI9341_BLACK); // clear row
+        tft.println(s); // write new value
+        
+        oldSensorValues[i] = val;
+      }
     }
   }
   
