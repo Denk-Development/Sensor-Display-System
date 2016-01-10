@@ -16,7 +16,7 @@
 
 #define transmissionInvervall 300
 
-const byte numberOfSensors = 9, bytesPerSensor = 4;
+const byte numberOfSensors = 10, bytesPerSensor = 4;
 
 byte * data, * sensorValue;
 
@@ -64,7 +64,7 @@ void setup() {
   tempsensor3.begin(0x1A);
   tempsensor4.begin(0x1B);
   
-  htu.begin(0x1C);
+  htu.begin(0x40);
   
   // flow sensor
   pinMode(flowSensorPin, INPUT);
@@ -168,7 +168,11 @@ boolean readSensorData() {
         break;
       case 8:
         // HTU21D-F
-        sensorValue = 444.12; //htu.readHumidity();
+        sensorValue = htu.readHumidity();
+        break;
+      case 9:
+        // HTU21D-F
+        sensorValue = htu.readTemperature();
         break;
       default: 
         sensorValue = -1.0f;

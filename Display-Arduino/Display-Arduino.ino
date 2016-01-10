@@ -1,5 +1,3 @@
-
-
 #include <SoftwareSerial.h>
 
 // display
@@ -14,7 +12,7 @@
 
 #define dataLinkRX 3
 #define dataLinkTX 4 
-#define numberOfSensors 9
+#define numberOfSensors 10
 #define bytesPerSensor 4
 
 const unsigned int millisUntilJamDetection = 50;
@@ -52,7 +50,8 @@ void setup() {
   tft.println("  Primaerstrom:   0.00");
   tft.println("  BUS Spannung:   0.00");
   tft.println("  FlowSensor:     0.00");
-  tft.println("  HTU21D-F:       0.00");
+  tft.println("  HTU21D-F Temp:  0.00");
+  tft.println("  HTU21D-F Hum:   0.00");
   
   dataLength = numberOfSensors * bytesPerSensor;
   data = (byte *) malloc(sizeof(byte) * dataLength);
