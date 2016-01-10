@@ -64,7 +64,7 @@ void setup() {
   tempsensor3.begin(0x1A);
   tempsensor4.begin(0x1B);
   
-  htu.begin(0x40);
+  htu.begin();
   
   // flow sensor
   pinMode(flowSensorPin, INPUT);
