@@ -14,7 +14,7 @@
 #define lineHeightPxl 16
 
 // sd card breakout
-#define SD_CS 4
+#define SD_CS 5
 
 #define BUFFPIXEL 20
 
