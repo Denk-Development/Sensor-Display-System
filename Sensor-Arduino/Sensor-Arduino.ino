@@ -14,7 +14,7 @@
 #define dataLinkRX 3
 #define dataLinkTX 4
 
-#define transmissionInvervall 300
+#define transmissionInterval 300
 
 const byte numberOfSensors = 10, bytesPerSensor = 4;
 
@@ -83,7 +83,7 @@ void setup() {
 }
 
 void loop() {
-  if ((millis() - lastTransmission) > transmissionInvervall && readSensorData()) {
+  if ((millis() - lastTransmission) > transmissionInterval && readSensorData()) {
     lastTransmission = millis();
     // data has changed
     dataLink.write(data, dataLength);

@@ -1,0 +1,19 @@
+DISPLAY ILI9341
+3-5V Vin connects to the Arduino 5V pin
+GND connects to Arduino ground
+CLK connects to SPI clock. On Arduino Uno/Duemilanove/328-based, thats Digital 13. On Mega's, its Digital 52 and on Leonardo/Due its ICSP-3 (See SPI Connections for more details)
+MISO connects to SPI MISO. On Arduino Uno/Duemilanove/328-based, thats Digital 12. On Mega's, its Digital 50 and on Leonardo/Due its ICSP-1 (See SPI Connections for more details)
+MOSI connects to SPI MOSI. On Arduino Uno/Duemilanove/328-based, thats Digital 11. On Mega's, its Digital 51 and on Leonardo/Due its ICSP-4 (See SPI Connections for more details)
+CS connects to our SPI Chip Select pin. We'll be using Digital 10 but you can later change this to any pin
+D/C connects to our SPI data/command select pin. We'll be using Digital 9 but you can later change this pin too.
+
+SD CARD BREAKOUT
+pin 11 = MOSI
+pin 12 = MISO
+pin 13 = SCK
+pin 5 = CS (variable)
+
+
+SENSOR TEENSY
+dataLinkRX 0
+dataLinkTX 1 

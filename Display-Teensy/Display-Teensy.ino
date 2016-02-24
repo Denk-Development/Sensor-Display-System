@@ -1,7 +1,3 @@
-// THIS CODE IS DEPRECATED
-// use "Display-Teensy" instead
-
-#include <SoftwareSerial.h>
 #include <SPI.h>
 
 // sd card
@@ -10,6 +6,8 @@
 // display
 #include "Adafruit_GFX.h"
 #include "Adafruit_ILI9341.h"
+
+#define dataLink Serial1 // RX: 0; TX: 1
 
 // display
 #define TFT_DC 9
@@ -21,8 +19,6 @@
 
 #define BUFFPIXEL 20
 
-#define dataLinkRX 3
-#define dataLinkTX 4 
 #define numberOfSensors 10
 #define bytesPerSensor 4
 
@@ -37,8 +33,6 @@ float * oldSensorValues = (float *) calloc(sizeof(float), numberOfSensors);
 int dataLength, bytesAvailable, bytesAvailableAfterDelay;
 
 long numberOfBytesAvailableLastTime = 0;
-
-SoftwareSerial dataLink(dataLinkRX, dataLinkTX); // RX, TX
 
 // display object
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
@@ -61,10 +55,13 @@ void setup() {
   // draw logo
   bmpDraw("logo.bmp", 0, 0);
   
-  delay(3000); // show logo
+  Serial.println("showing logo");
+  
+  delay(5000); // show logo
   
   
   
+  Serial.println("showing sensor data");
   tft.setTextSize(2);
   tft.fillScreen(ILI9341_BLACK);
 
@@ -91,16 +88,20 @@ void loop() {
   if (jamTimerSet && lastPossibleJam < millis() - millisUntilJamDetection) {
     jamTimerSet = false;
     flushDataLinkBuffer();
+    Serial.println("flushed");
   }
   
   
   // check if data is currently incoming
   if (numberOfBytesAvailableLastTime != dataLink.available()) {
     jamTimerSet = false;
+    Serial.println("jam timer set");
   }
   
   if (dataLink.available() > 0 && dataLink.available() % dataLength == 0) {
     jamTimerSet = false;
+    
+    Serial.println("data incoming");
     
     dataLink.readBytes((char *)data, dataLength);
     for (int i = 0;  i < numberOfSensors; i++) {
