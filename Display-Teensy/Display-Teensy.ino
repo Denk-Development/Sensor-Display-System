@@ -1,7 +1,8 @@
 #include <SPI.h>
 
-// sd card
+// sd card / logging
 #include <SD.h>
+#include <Time.h>  
 
 // display
 #include "Adafruit_GFX.h"
@@ -21,6 +22,9 @@
 
 #define numberOfSensors 10
 #define bytesPerSensor 4
+
+File logFile;
+char logFileName[12]; // log files have a fixed file name length of 10+1 chars ("MMDDHH.LOG")
 
 const unsigned int millisUntilJamDetection = 50;
 
@@ -60,6 +64,16 @@ void setup() {
   delay(5000); // show logo
   
   
+  // initialize time module 
+  // set the Time library to use Teensy 3.0's RTC to keep time
+  setSyncProvider(getTeensy3Time);
+  delay(100);
+  if (timeStatus() != timeSet) {
+    Serial.println("Unable to sync with the RTC");
+  } else {
+    Serial.println("RTC has set the system time");
+  }
+  
   
   Serial.println("showing sensor data");
   tft.setTextSize(2);
@@ -80,11 +94,37 @@ void setup() {
   dataLength = numberOfSensors * bytesPerSensor;
   data = (byte *) malloc(sizeof(byte) * dataLength);
   
+  // create log file
+  String tmp = getLogFileName();
+  logFileName[tmp.length()+1];
+  tmp.toCharArray(logFileName, sizeof(logFileName));
+  Serial.println(tmp.length());
+  Serial.println(tmp);
+  Serial.println(logFileName);
+  logFile = SD.open(logFileName, FILE_WRITE);
+  logFile.close();
+  
+  // check if the log file has been created successfully
+  if (SD.exists(logFileName)) {
+    Serial.println("log file created");
+  } else {
+    Serial.println("couldn't create log file");
+  }
+  
+  
+  // serial connection to sensor arduino
   dataLink.begin(57600); 
   // baud rates 300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 31250, 38400, 57600, 115200
 }
 
 void loop() {
+  // time module
+  /*time_t t = processSyncMessage();
+  if (t != 0) {
+    Teensy3Clock.set(t); // set the RTC
+    setTime(t);
+  }
+    
   if (jamTimerSet && lastPossibleJam < millis() - millisUntilJamDetection) {
     jamTimerSet = false;
     flushDataLinkBuffer();
@@ -104,9 +144,17 @@ void loop() {
     Serial.println("data incoming");
     
     dataLink.readBytes((char *)data, dataLength);
+    
+    // open log file
+    logFile = SD.open(logFileName, FILE_WRITE);
+    logFile.print(getTimeString()); // log time
+    
     for (int i = 0;  i < numberOfSensors; i++) {
       float * sensorValue = (float *) & data[i * bytesPerSensor];
       float val = * sensorValue;
+      
+      logFile.print(",");
+      logFile.print(val);
       
       Serial.println("Sensor " + String(i) + ": " + String(val));
       
@@ -125,6 +173,10 @@ void loop() {
         oldSensorValues[i] = val;
       }
     }
+    
+    // log file end line
+    logFile.println();
+    logFile.close(); // save changes
   }
   
   // possibly invalid data in the buffer
@@ -151,8 +203,53 @@ String floatToDisplayString(float f) {
 }
 
 
+// time module code
 
+String getTimeString() {
+  return addLeadingZeros(year(), 4) + "." + addLeadingZeros(month(), 2) + "." + addLeadingZeros(day(), 2) + " " + addLeadingZeros(hour(), 2) + ":" + addLeadingZeros(minute(), 2) + ":" + addLeadingZeros(second(), 2);
+}
 
+String getLogFileName() {
+  return addLeadingZeros(month(), 2) + addLeadingZeros(day(), 2) + addLeadingZeros(hour(), 2) + ".LOG";  
+}
+
+time_t getTeensy3Time()
+{
+  return Teensy3Clock.get();
+}
+
+/*  code to process time sync messages from the serial port   */
+#define TIME_HEADER  "T"   // Header tag for serial time sync message
+
+unsigned long processSyncMessage() {
+  unsigned long pctime = 0L;
+  const unsigned long DEFAULT_TIME = 1357041600; // Jan 1 2013 
+
+  if(Serial.find(TIME_HEADER)) {
+     pctime = Serial.parseInt();
+     return pctime;
+     if( pctime < DEFAULT_TIME) { // check the value is a valid time (greater than Jan 1 2013)
+       pctime = 0L; // return 0 to indicate that the time is not valid
+     }
+  }
+  return pctime;
+}
+
+void printDigits(int digits){
+  // utility function for digital clock display: prints preceding colon and leading 0
+  Serial.print(":");
+  if(digits < 10)
+    Serial.print('0');
+  Serial.print(digits);
+}
+
+String addLeadingZeros(int x, int digits) {
+  String str = String(x);
+  while (str.length() < digits) {
+    str = '0' + str;
+  }
+  return str;
+}
 
 
 
@@ -193,7 +290,7 @@ void bmpDraw(char *filename, uint8_t x, uint16_t y) {
 
   // Open requested file on SD card
   if ((bmpFile = SD.open(filename)) == NULL) {
-    Serial.print(F("File not found"));
+    Serial.print(F("file not found"));
     return;
   }
 
