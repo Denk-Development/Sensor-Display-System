@@ -119,12 +119,6 @@ void setup() {
 
 void loop() {
   // time module
-  /*time_t t = processSyncMessage();
-  if (t != 0) {
-    Teensy3Clock.set(t); // set the RTC
-    setTime(t);
-  }
-    
   if (jamTimerSet && lastPossibleJam < millis() - millisUntilJamDetection) {
     jamTimerSet = false;
     flushDataLinkBuffer();
