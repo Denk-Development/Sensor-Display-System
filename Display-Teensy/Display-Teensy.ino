@@ -5,15 +5,18 @@
 #include <Time.h>  
 
 // display
-#include "Adafruit_GFX.h"
-#include "Adafruit_ILI9341.h"
+#include <ILI9341_t3.h>
+#include <font_Arial.h>
+#include <font_ArialBold.h>
+#include <font_ArialItalic.h>
+#include <font_ArialBoldItalic.h>
 
 #define dataLink Serial1 // RX: 0; TX: 1
 
 // display
 #define TFT_DC 9
 #define TFT_CS 10
-#define lineHeightPxl 16
+#define backgroundColor ILI9341_BLACK
 
 // sd card breakout
 #define SD_CS 5
@@ -39,7 +42,7 @@ int dataLength, bytesAvailable, bytesAvailableAfterDelay;
 long numberOfBytesAvailableLastTime = 0;
 
 // display object
-Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
+ILI9341_t3 tft = ILI9341_t3(TFT_CS, TFT_DC);
 
 void setup() {
   Serial.begin(9600);
@@ -47,7 +50,7 @@ void setup() {
   // start tft
   tft.begin();
   tft.setRotation(3);
-  tft.fillScreen(ILI9341_BLACK);
+  tft.fillScreen(backgroundColor);
   
   // start sd card
   Serial.print("Initializing SD card...");
@@ -78,18 +81,20 @@ void setup() {
   Serial.println("showing sensor data");
   tft.setTextSize(2);
   tft.fillScreen(ILI9341_BLACK);
-
+  
+  // show small logo
+  bmpDraw("logocut.bmp", 160, 0);
+  tft.setCursor (5, 15);
+  tft.setFont(Arial_12_Bold);
+  tft.print("LaserShowDesign");
+  
   // print sensor names
-  tft.println("  Temp Bruecke:   0.00");
-  tft.println("  Temp PFC:       0.00");
-  tft.println("  Temp MMC:       0.00");
-  tft.println("  Temp Wasser:    0.00");
-  tft.println("  Input Strom:    0.00");
-  tft.println("  Primaerstrom:   0.00");
-  tft.println("  BUS Spannung:   0.00");
-  tft.println("  FlowSensor:     0.00");
-  tft.println("  HTU21D-F Temp:  0.00");
-  tft.println("  HTU21D-F Hum:   0.00");
+  tft.setFont(Arial_12);
+  String sensorNames[numberOfSensors] = { "Temp Bruecke", "Temp PFC", "Temp MMC", "Temp Wasser", "Input Strom", "Primaerstrom", "BUS Spannung", "FlowSensor", "HTU21D-F Temp", "HTU21D-F Hum" };
+  for (int i = 0; i < numberOfSensors; i++) {
+    tft.setCursor(5, 5 + 52 + 15 * i);
+    tft.print(sensorNames[i]);
+  }
   
   dataLength = numberOfSensors * bytesPerSensor;
   data = (byte *) malloc(sizeof(byte) * dataLength);
@@ -154,15 +159,14 @@ void loop() {
       
       // write only to the screen when values have changed
       if (oldSensorValues[i] != val) {
-        int iTimesLineHeight = i * lineHeightPxl;
-        tft.setCursor(192, iTimesLineHeight + 1);
-        String s = floatToDisplayString(val);
+        String valString = floatToDisplayString(val);
+        byte valStringLength = valString.length();
+        byte cursorY = 5 + 52 + 15 * i;
+        tft.setCursor(5 + 160 + (8 - valStringLength) * 9, cursorY);
         
-        // handle as many tasks as possible before clearing the row
-        //           x    y                 width height         color
-        //           190                    to 130
-        tft.fillRect(192, iTimesLineHeight, 78,   lineHeightPxl, ILI9341_BLACK); // clear row
-        tft.println(s); // write new value
+        // hide old value by drawing a rectangle (x, y, width, height)
+        tft.fillRect(160, cursorY, 160, 15, backgroundColor); // clear row
+        tft.print(valString);
         
         oldSensorValues[i] = val;
       }
@@ -190,9 +194,9 @@ void flushDataLinkBuffer() {
 String floatToDisplayString(float f) {
   String s = String(f);
   // add leading spaces
-  while (s.length() < 6) {
+  /*while (s.length() < 7) {
     s = " " + s;
-  }
+  }*/
   return s; 
 }
 
