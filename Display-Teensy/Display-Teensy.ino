@@ -17,9 +17,10 @@
 #define TFT_DC 9
 #define TFT_CS 10
 #define BACKGROUND_COLOR ILI9341_BLACK
-#define sensorStringsOffsetTop 40
+#define sensorStringsOffsetTop 30
 #define sensorStringsLineHeight 15
 #define unitsOffset 240
+#define offsetPerHr 2
 
 // sd card breakout
 #define SD_CS 5
@@ -46,6 +47,10 @@ long numberOfBytesAvailableLastTime = 0;
 
 // display object
 ILI9341_t3 tft = ILI9341_t3(TFT_CS, TFT_DC);
+
+  String sensorNames[numberOfSensors] = { "Current Phase 1", "Current Phase 2", "Current Phase 3", "BUS Voltage", "Current Primary", "Temp PFC", "Temp Bridge", "Temp MMC", "Temp Water", "Water Flow", "Temp Outside", "Humidity", "Battery Voltage" };
+  String sensorUnits[numberOfSensors] = { "A", "A", "A", "V", "A", "C", "C", "C", "C", "ml/min", "C", "%", "V" };
+  byte sensorLineOffset[numberOfSensors] = { 0, 0, 0, offsetPerHr, offsetPerHr, 2 * offsetPerHr, 2 * offsetPerHr, 2 * offsetPerHr, 3 * offsetPerHr, 3 * offsetPerHr, 6 * offsetPerHr, 6 * offsetPerHr, 6 * offsetPerHr };
 
 void setup() {
   Serial.begin(9600);
@@ -84,8 +89,8 @@ void setup() {
   Serial.println("showing sensor data");
   tft.fillScreen(BACKGROUND_COLOR);
   
-  tft.setCursor(50, 5);
-  tft.setFont(Arial_32);
+  tft.setCursor(70, 5);
+  tft.setFont(Arial_24);
   tft.setTextColor(rgb2col(255,0,0));
   tft.print("RAIDEN I");
   
@@ -93,10 +98,12 @@ void setup() {
   // print sensor names
   tft.setFont(Arial_10);
   tft.setTextColor(rgb2col(255,255,255));
-  String sensorNames[numberOfSensors] = { "Current Phase 1", "Current Phase 2", "Current Phase 3", "BUS Voltage", "Current Primary", "Temp PFC", "Temp Bridge", "Temp MMC", "Temp Water", "Water Flow", "Temp Outside", "Humidity", "Battery Voltage" };
-  String sensorUnits[numberOfSensors] = { "A", "A", "A", "V", "A", "C", "C", "C", "C", "ml/min", "C", "%", "V" };
-  for (int i = 0; i < numberOfSensors; i++) {
-    int yOffset =  5 + sensorStringsOffsetTop + sensorStringsLineHeight * i;
+  for (int i = 0; i < numberOfSensors; i++) {    
+    if (i == 10) {
+      tft.setFont(Arial_8);
+    }
+    
+    int yOffset =  5 + sensorStringsOffsetTop + sensorStringsLineHeight * i + sensorLineOffset[i];
     tft.setCursor(15, yOffset);
     tft.print(sensorNames[i]);
     tft.setCursor(unitsOffset, yOffset);
@@ -105,10 +112,10 @@ void setup() {
   
   // draw horizontal lines
   uint16_t hLineColor = rgb2col(25,25,25);
-  tft.drawFastHLine(0, 5 + sensorStringsOffsetTop + 3 * sensorStringsLineHeight - 3, 320, hLineColor);
-  tft.drawFastHLine(0, 5 + sensorStringsOffsetTop + 5 * sensorStringsLineHeight - 3, 320, hLineColor);
-  tft.drawFastHLine(0, 5 + sensorStringsOffsetTop + 8 * sensorStringsLineHeight - 3, 320, hLineColor);
-  tft.drawFastHLine(0, 5 + sensorStringsOffsetTop + 10 * sensorStringsLineHeight - 3, 320, hLineColor);
+  tft.drawFastHLine(0, 5 + sensorStringsOffsetTop + 3 * sensorStringsLineHeight - 3 + 1 * offsetPerHr, 320, hLineColor);
+  tft.drawFastHLine(0, 5 + sensorStringsOffsetTop + 5 * sensorStringsLineHeight - 3 + 2 * offsetPerHr, 320, hLineColor);
+  tft.drawFastHLine(0, 5 + sensorStringsOffsetTop + 8 * sensorStringsLineHeight - 3 + 3 * offsetPerHr, 320, hLineColor);
+  tft.drawFastHLine(0, 5 + sensorStringsOffsetTop + 10 * sensorStringsLineHeight - 3 + 4 * offsetPerHr, 320, hLineColor);
   
   dataLength = numberOfSensors * bytesPerSensor;
   data = (byte *) malloc(sizeof(byte) * dataLength);
@@ -162,7 +169,11 @@ void loop() {
     logFile = SD.open(logFileName, FILE_WRITE);
     logFile.print(getTimeString()); // log time
     
-    for (int i = 0;  i < numberOfSensors; i++) {
+    tft.setFont(Arial_10);
+    for (int i = 0;  i < numberOfSensors; i++) {    
+      if (i == 10) {
+        tft.setFont(Arial_8);
+      }
       float * sensorValue = (float *) & data[i * bytesPerSensor];
       float val = * sensorValue;
       
@@ -176,7 +187,7 @@ void loop() {
         String valString = floatToDisplayString(val);
         byte valStringLength = valString.length();
         byte minusSignOffset = (valString.charAt(0) == '-') ? 4 : 0;
-        byte cursorY = 5 + sensorStringsOffsetTop + sensorStringsLineHeight * i;
+        byte cursorY = 5 + sensorStringsOffsetTop + sensorStringsLineHeight * i + sensorLineOffset[i];
         tft.setCursor(5 + 160 + (8 - valStringLength) * 9 + minusSignOffset, cursorY);
         
         // hide old value by drawing a rectangle (x, y, width, height)
