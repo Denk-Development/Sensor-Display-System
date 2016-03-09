@@ -1,7 +1,7 @@
 #include <SoftwareSerial.h>
 #include <Wire.h>
-//#include <Adafruit_MCP9808.h>
-//#include <Adafruit_HTU21DF.h>
+#include <Adafruit_MCP9808.h>
+#include <Adafruit_HTU21DF.h>
 
 // pinning
 #define inputCurrentPin A0
@@ -27,12 +27,12 @@ unsigned long lastTransmission = 0;
 SoftwareSerial dataLink(dataLinkRX, dataLinkTX); // RX, TX
 
 // sensors
-/*Adafruit_MCP9808 tempsensor1 = Adafruit_MCP9808();
+Adafruit_MCP9808 tempsensor1 = Adafruit_MCP9808();
 Adafruit_MCP9808 tempsensor2 = Adafruit_MCP9808();
 Adafruit_MCP9808 tempsensor3 = Adafruit_MCP9808();
 Adafruit_MCP9808 tempsensor4 = Adafruit_MCP9808();
 
-Adafruit_HTU21DF htu = Adafruit_HTU21DF();*/
+Adafruit_HTU21DF htu = Adafruit_HTU21DF();
 
 // flow sensor
 // The hall-effect flow sensor outputs approximately 4.5 pulses per second per
@@ -59,12 +59,12 @@ void setup() {
   
   
   // temp sensors
-  /*tempsensor1.begin(0x18);
+  tempsensor1.begin(0x18);
   tempsensor2.begin(0x19);
   tempsensor3.begin(0x1A);
   tempsensor4.begin(0x1B);
   
-  htu.begin();*/
+  htu.begin();
   
   // flow sensor
   pinMode(flowSensorPin, INPUT);
@@ -156,19 +156,19 @@ boolean readSensorData() {
         break;
       case 5:
         // Temp PFC
-        sensorValue = 2; //tempsensor2.readTempC();
+        sensorValue = tempsensor2.readTempC();
         break;
       case 6:
         // Temp Bridge
-        sensorValue = 1; //tempsensor1.readTempC();
+        sensorValue = tempsensor1.readTempC();
         break;
       case 7:
         // Temp MMC
-        sensorValue = 3; //tempsensor3.readTempC();
+        sensorValue = tempsensor3.readTempC();
         break;
       case 8:
         // Temp Water
-        sensorValue = 4; //tempsensor4.readTempC();
+        sensorValue = tempsensor4.readTempC();
         break;
       case 9:
         // Water Flow
@@ -176,11 +176,11 @@ boolean readSensorData() {
         break;
       case 10:
         // HTU21D-F
-        sensorValue = 5; //htu.readHumidity();
+        sensorValue = htu.readTemperature();
         break;
       case 11:
         // HTU21D-F
-        sensorValue = 6; //htu.readTemperature();
+        sensorValue = htu.readHumidity();
         break;
       default: 
         sensorValue = -1.0f;
