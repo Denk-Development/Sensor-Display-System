@@ -1,7 +1,7 @@
 #include <SoftwareSerial.h>
 #include <Wire.h>
-#include <Adafruit_MCP9808.h>
-#include <Adafruit_HTU21DF.h>
+//#include <Adafruit_MCP9808.h>
+//#include <Adafruit_HTU21DF.h>
 
 // pinning
 #define inputCurrentPin A0
@@ -16,7 +16,7 @@
 
 #define transmissionInterval 300
 
-const byte numberOfSensors = 10, bytesPerSensor = 4;
+const byte numberOfSensors = 13, bytesPerSensor = 4;
 
 byte * data, * sensorValue;
 
@@ -27,12 +27,12 @@ unsigned long lastTransmission = 0;
 SoftwareSerial dataLink(dataLinkRX, dataLinkTX); // RX, TX
 
 // sensors
-Adafruit_MCP9808 tempsensor1 = Adafruit_MCP9808();
+/*Adafruit_MCP9808 tempsensor1 = Adafruit_MCP9808();
 Adafruit_MCP9808 tempsensor2 = Adafruit_MCP9808();
 Adafruit_MCP9808 tempsensor3 = Adafruit_MCP9808();
 Adafruit_MCP9808 tempsensor4 = Adafruit_MCP9808();
 
-Adafruit_HTU21DF htu = Adafruit_HTU21DF();
+Adafruit_HTU21DF htu = Adafruit_HTU21DF();*/
 
 // flow sensor
 // The hall-effect flow sensor outputs approximately 4.5 pulses per second per
@@ -59,12 +59,12 @@ void setup() {
   
   
   // temp sensors
-  tempsensor1.begin(0x18);
+  /*tempsensor1.begin(0x18);
   tempsensor2.begin(0x19);
   tempsensor3.begin(0x1A);
   tempsensor4.begin(0x1B);
   
-  htu.begin();
+  htu.begin();*/
   
   // flow sensor
   pinMode(flowSensorPin, INPUT);
@@ -135,44 +135,52 @@ boolean readSensorData() {
     float sensorValue;
     switch(sensor) {
       case 0:
-        // Temp Brücke
-        sensorValue = tempsensor1.readTempC();
-        break;
-      case 1:
-        // Temp PFC
-        sensorValue = tempsensor2.readTempC();
-        break;
-      case 2:
-        // Temp MMC
-        sensorValue = tempsensor3.readTempC();
-        break;
-      case 3:
-        // Temp Wasser
-        sensorValue = tempsensor4.readTempC();
-        break;
-      case 4:
-        // Eingangsstrom
+        // Current Phase 1
         sensorValue = (float)analogRead(inputCurrentPin);
         break;
-      case 5:
-        // Primärstrom
-        sensorValue = (float)analogRead(flowCurrrentPin);
+      case 1:
+        // Current Phase 2
+        sensorValue = (float)analogRead(inputCurrentPin + 1);
         break;
-      case 6:
+      case 2:
+        // Current Phase 3
+        sensorValue = (float)analogRead(inputCurrentPin + 2);
+        break;
+      case 3:
         // BUS Spannung
         sensorValue = (float)analogRead(busVoltagePin);
         break;
+      case 4:
+        // Current Primary
+        sensorValue = (float)analogRead(flowCurrrentPin);
+        break;
+      case 5:
+        // Temp PFC
+        sensorValue = 2; //tempsensor2.readTempC();
+        break;
+      case 6:
+        // Temp Bridge
+        sensorValue = 1; //tempsensor1.readTempC();
+        break;
       case 7:
-        // FlowSensor
-        sensorValue = flowSensorOutput;
+        // Temp MMC
+        sensorValue = 3; //tempsensor3.readTempC();
         break;
       case 8:
-        // HTU21D-F
-        sensorValue = htu.readHumidity();
+        // Temp Water
+        sensorValue = 4; //tempsensor4.readTempC();
         break;
       case 9:
+        // Water Flow
+        sensorValue = flowSensorOutput;
+        break;
+      case 10:
         // HTU21D-F
-        sensorValue = htu.readTemperature();
+        sensorValue = 5; //htu.readHumidity();
+        break;
+      case 11:
+        // HTU21D-F
+        sensorValue = 6; //htu.readTemperature();
         break;
       default: 
         sensorValue = -1.0f;
