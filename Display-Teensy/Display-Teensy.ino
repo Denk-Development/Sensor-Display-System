@@ -16,14 +16,17 @@
 // display
 #define TFT_DC 9
 #define TFT_CS 10
-#define backgroundColor ILI9341_BLACK
+#define BACKGROUND_COLOR ILI9341_BLACK
+#define sensorStringsOffsetTop 40
+#define sensorStringsLineHeight 15
+#define unitsOffset 240
 
 // sd card breakout
 #define SD_CS 5
 
 #define BUFFPIXEL 20
 
-#define numberOfSensors 10
+#define numberOfSensors 13
 #define bytesPerSensor 4
 
 File logFile;
@@ -50,7 +53,7 @@ void setup() {
   // start tft
   tft.begin();
   tft.setRotation(3);
-  tft.fillScreen(backgroundColor);
+  tft.fillScreen(BACKGROUND_COLOR);
   
   // start sd card
   Serial.print("Initializing SD card...");
@@ -79,22 +82,33 @@ void setup() {
   
   
   Serial.println("showing sensor data");
-  tft.setTextSize(2);
-  tft.fillScreen(ILI9341_BLACK);
+  tft.fillScreen(BACKGROUND_COLOR);
   
-  // show small logo
-  bmpDraw("logocut.bmp", 160, 0);
-  tft.setCursor (5, 15);
-  tft.setFont(Arial_12_Bold);
-  tft.print("LaserShowDesign");
+  tft.setCursor(50, 5);
+  tft.setFont(Arial_32);
+  tft.setTextColor(rgb2col(255,0,0));
+  tft.print("RAIDEN I");
+  
   
   // print sensor names
-  tft.setFont(Arial_12);
-  String sensorNames[numberOfSensors] = { "Temp Bruecke", "Temp PFC", "Temp MMC", "Temp Wasser", "Input Strom", "Primaerstrom", "BUS Spannung", "FlowSensor", "HTU21D-F Temp", "HTU21D-F Hum" };
+  tft.setFont(Arial_10);
+  tft.setTextColor(rgb2col(255,255,255));
+  String sensorNames[numberOfSensors] = { "Current Phase 1", "Current Phase 2", "Current Phase 3", "BUS Voltage", "Current Primary", "Temp PFC", "Temp Bridge", "Temp MMC", "Temp Water", "Water Flow", "Temp Outside", "Humidity", "Battery Voltage" };
+  String sensorUnits[numberOfSensors] = { "A", "A", "A", "V", "A", "C", "C", "C", "C", "ml/min", "C", "%", "V" };
   for (int i = 0; i < numberOfSensors; i++) {
-    tft.setCursor(5, 5 + 52 + 15 * i);
+    int yOffset =  5 + sensorStringsOffsetTop + sensorStringsLineHeight * i;
+    tft.setCursor(15, yOffset);
     tft.print(sensorNames[i]);
+    tft.setCursor(unitsOffset, yOffset);
+    tft.print(sensorUnits[i]);
   }
+  
+  // draw horizontal lines
+  uint16_t hLineColor = rgb2col(25,25,25);
+  tft.drawFastHLine(0, 5 + sensorStringsOffsetTop + 3 * sensorStringsLineHeight - 3, 320, hLineColor);
+  tft.drawFastHLine(0, 5 + sensorStringsOffsetTop + 5 * sensorStringsLineHeight - 3, 320, hLineColor);
+  tft.drawFastHLine(0, 5 + sensorStringsOffsetTop + 8 * sensorStringsLineHeight - 3, 320, hLineColor);
+  tft.drawFastHLine(0, 5 + sensorStringsOffsetTop + 10 * sensorStringsLineHeight - 3, 320, hLineColor);
   
   dataLength = numberOfSensors * bytesPerSensor;
   data = (byte *) malloc(sizeof(byte) * dataLength);
@@ -161,11 +175,12 @@ void loop() {
       if (oldSensorValues[i] != val) {
         String valString = floatToDisplayString(val);
         byte valStringLength = valString.length();
-        byte cursorY = 5 + 52 + 15 * i;
-        tft.setCursor(5 + 160 + (8 - valStringLength) * 9, cursorY);
+        byte minusSignOffset = (valString.charAt(0) == '-') ? 4 : 0;
+        byte cursorY = 5 + sensorStringsOffsetTop + sensorStringsLineHeight * i;
+        tft.setCursor(5 + 160 + (8 - valStringLength) * 9 + minusSignOffset, cursorY);
         
         // hide old value by drawing a rectangle (x, y, width, height)
-        tft.fillRect(160, cursorY, 160, 15, backgroundColor); // clear row
+        tft.fillRect(160, cursorY, 75, sensorStringsLineHeight - 4, BACKGROUND_COLOR); // clear row
         tft.print(valString);
         
         oldSensorValues[i] = val;
@@ -198,6 +213,11 @@ String floatToDisplayString(float f) {
     s = " " + s;
   }*/
   return s; 
+}
+
+
+uint16_t rgb2col(uint8_t r, uint8_t g, uint8_t b) {
+  return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
 }
 
 
