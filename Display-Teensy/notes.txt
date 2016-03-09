@@ -1,0 +1,13 @@
+SD Card works only with: card.init(SPI_QUARTER_SPEED, chipSelect)
+https://github.com/adafruit/Adafruit_ILI9341/blob/master/examples/spitftbitmap/spitftbitmap.ino
+http://forum.arduino.cc/index.php?topic=108017.0
+
+
+Use alternative time library: http://forum.arduino.cc/index.php?topic=305003.0
+TimeTeensy3.ino example sketch works
+
+Wire Real-Time Module to 3.3 V
+
+Format SD Card not! with the Official Formatter on Mac but with the built in utilities FAT16
+
+Arduino IDE 1.0.6
