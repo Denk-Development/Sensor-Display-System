@@ -46,6 +46,7 @@ unsigned long oldTimeFlowSensor;
 // end flow sensor
 
 void setup() {
+  Serial.begin(9600);
   dataLink.begin(57600);
   // baud rates 300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 31250, 38400, 57600, 115200
     
@@ -83,10 +84,14 @@ void setup() {
 }
 
 void loop() {
-  if ((millis() - lastTransmission) > transmissionInterval && readSensorData()) {
+  readSensorData();
+  if ((millis() - lastTransmission) > transmissionInterval) {
     lastTransmission = millis();
-    // data has changed
     dataLink.write(data, dataLength);
+    Serial.println("data sent");
+  }
+  else {
+    Serial.println(lastTransmission);
   }
   
   if((millis() - oldTimeFlowSensor) > 1000)    // Only process counters once per second
