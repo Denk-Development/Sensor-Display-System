@@ -139,7 +139,7 @@ void setup() {
   
   
   // serial connection to sensor arduino
-  dataLink.begin(57600); 
+  dataLink.begin(58824); // Arduino 57600 is actually 58824 (https://www.pjrc.com/teensy/td_uart.html)
   // baud rates 300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 31250, 38400, 57600, 115200
 }
 
