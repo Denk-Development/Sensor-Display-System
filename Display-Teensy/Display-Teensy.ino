@@ -48,9 +48,9 @@ long numberOfBytesAvailableLastTime = 0;
 // display object
 ILI9341_t3 tft = ILI9341_t3(TFT_CS, TFT_DC);
 
-  String sensorNames[numberOfSensors] = { "Current Phase 1", "Current Phase 2", "Current Phase 3", "BUS Voltage", "Current Primary", "Temp PFC", "Temp Bridge", "Temp MMC", "Temp Water", "Water Flow", "Temp Outside", "Humidity", "Battery Voltage" };
-  String sensorUnits[numberOfSensors] = { "A", "A", "A", "V", "A", "C", "C", "C", "C", "ml/min", "C", "%", "V" };
-  byte sensorLineOffset[numberOfSensors] = { 0, 0, 0, offsetPerHr, offsetPerHr, 2 * offsetPerHr, 2 * offsetPerHr, 2 * offsetPerHr, 3 * offsetPerHr, 3 * offsetPerHr, 6 * offsetPerHr, 6 * offsetPerHr, 6 * offsetPerHr };
+String sensorNames[numberOfSensors] = { "Current Phase 1", "Current Phase 2", "Current Phase 3", "BUS Voltage", "Current Primary", "Temp PFC", "Temp Bridge", "Temp MMC", "Temp Water", "Water Flow", "Temp Outside", "Humidity", "Battery Voltage" };
+String sensorUnits[numberOfSensors] = { "A", "A", "A", "V", "A", "C", "C", "C", "C", "ml/min", "C", "%", "V" };
+byte sensorLineOffset[numberOfSensors] = { 0, 0, 0, offsetPerHr, offsetPerHr, 2 * offsetPerHr, 2 * offsetPerHr, 2 * offsetPerHr, 3 * offsetPerHr, 3 * offsetPerHr, 6 * offsetPerHr, 6 * offsetPerHr, 6 * offsetPerHr };
 
 void setup() {
   Serial.begin(9600);
