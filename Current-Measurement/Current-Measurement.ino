@@ -62,7 +62,7 @@ float measureCurrent(byte pin) {
       ADMUX |= 0B1;
       break;
     case A2: 
-      AXMUUX |= 0B10;
+      AXMUX |= 0B10;
       break;
   }
     
@@ -107,3 +107,5 @@ float measureCurrent(byte pin) {
     
     return fCurrentRMS;
   }
+  return 0;
+}

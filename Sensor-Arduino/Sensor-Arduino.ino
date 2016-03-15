@@ -34,6 +34,12 @@ Adafruit_MCP9808 tempsensor4 = Adafruit_MCP9808();
 
 Adafruit_HTU21DF htu = Adafruit_HTU21DF();
 
+// AC current (3 sensors, A0, A1, A2)
+float gfLineVoltage = 230.0f; // current in V
+float gfACS712_Factor = 60.0f; // 50.0f for 20A sensor, 75.76f for 30A sensor; 27.03f for 5A sensor
+unsigned long gulSamplePeriod_us = 20000; // 50ms is 10 cycles at 50Hz and 12 cycles at 60Hz
+int giADCOffset[3] = { 512, 512, 512 }; // offset for "0" Sensor WSC1800
+
 // flow sensor
 // The hall-effect flow sensor outputs approximately 4.5 pulses per second per
 // litre/minute of flow.
@@ -136,15 +142,15 @@ boolean readSensorData() {
     switch(sensor) {
       case 0:
         // Current Phase 1
-        sensorValue = (float)analogRead(inputCurrentPin);
+        sensorValue = measureCurrent(0);
         break;
       case 1:
         // Current Phase 2
-        sensorValue = (float)analogRead(inputCurrentPin + 1);
+        sensorValue = measureCurrent(1);
         break;
       case 2:
         // Current Phase 3
-        sensorValue = (float)analogRead(inputCurrentPin + 2);
+        sensorValue = measureCurrent(2);
         break;
       case 3:
         // BUS Spannung
@@ -209,4 +215,59 @@ void pulseCounter()
 {
   // Increment the pulse counter
   pulseCount++;
+}
+
+float measureCurrent(byte analogPin) { // analogPin [0..8] 
+ long lNoSamples=0;
+ long lCurrentSumSQ = 0;
+ long lCurrentSum=0;
+
+  // set-up ADC
+  ADCSRA = 0x87; // turn on adc, adc-freq = 1/128 of CPU ; keep in min: adc converseion takes 13 ADC clock cycles
+  ADMUX = 0x40; // internal 5V reference
+
+  ADMUX |= analogPin; // choose pin
+    
+  
+  // 1st sample is slower due to datasheet - so we spoil it
+  ADCSRA |= (1 << ADSC);
+  while (!(ADCSRA & 0x10));
+  
+  // sample loop - with inital parameters, we will get approx 800 values in 100ms
+  unsigned long ulEndMicros = micros()+gulSamplePeriod_us;
+  while(micros()<ulEndMicros)
+  {
+    // start sampling and wait for result
+    ADCSRA |= (1 << ADSC);
+    while (!(ADCSRA & 0x10));
+    
+    // make sure that we read ADCL 1st
+    long lValue = ADCL; 
+    lValue += (ADCH << 8);
+    lValue -= giADCOffset[analogPin];
+
+    lCurrentSum += lValue;
+    lCurrentSumSQ += lValue*lValue;
+    lNoSamples++;
+  }
+  
+  // stop sampling
+  ADCSRA = 0x00;
+
+  if (lNoSamples>0) // if no samples, micros did run over
+  {  
+    // correct quadradic current sum for offset: Sum((i(t)+o)^2) = Sum(i(t)^2) + 2*o*Sum(i(t)) + o^2*NoSamples
+    // sum should be zero as we have sampled 5 cycles at 50Hz (or 6 at 60Hz)
+    float fOffset = (float)lCurrentSum/lNoSamples;
+    lCurrentSumSQ -= 2*fOffset*lCurrentSum + fOffset*fOffset*lNoSamples;
+    if (lCurrentSumSQ<0) {lCurrentSumSQ=0;} // avoid NaN due to round-off effects
+    
+    float fCurrentRMS = sqrtf((float)lCurrentSumSQ/(float)lNoSamples) * gfACS712_Factor / 1024;
+  
+    // correct offset for next round
+    giADCOffset[analogPin] = (int)(giADCOffset[analogPin] + fOffset + 0.5f);
+    
+    return fCurrentRMS;
+  }
+  return 0;
 }
