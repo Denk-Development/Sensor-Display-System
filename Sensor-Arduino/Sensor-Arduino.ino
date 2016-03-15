@@ -4,15 +4,19 @@
 #include <Adafruit_HTU21DF.h>
 
 // pinning
-#define inputCurrentPin A0
-#define flowCurrrentPin A1
-#define busVoltagePin A2
-
-#define flowSensorInterrupt 0  // 0 = digital pin 2
+// Serial TX Pin 0
+// Serial RX Pin 1
 #define flowSensorPin 2
-
 #define dataLinkRX 3
 #define dataLinkTX 4
+
+#define currentPhase1Pin A0
+#define currentPhase2Pin A1
+#define currentPhase3Pin A2
+#define flowCurrrentPin A5
+#define busVoltagePin A5 // <-- not assigned
+
+#define flowSensorInterrupt 0  // 0 = digital pin 2
 
 #define transmissionInterval 300
 
@@ -142,15 +146,15 @@ boolean readSensorData() {
     switch(sensor) {
       case 0:
         // Current Phase 1
-        sensorValue = measureCurrent(0);
+        sensorValue = measureCurrent(currentPhase1Pin);
         break;
       case 1:
         // Current Phase 2
-        sensorValue = measureCurrent(1);
+        sensorValue = measureCurrent(currentPhase2Pin);
         break;
       case 2:
         // Current Phase 3
-        sensorValue = measureCurrent(2);
+        sensorValue = measureCurrent(currentPhase3Pin);
         break;
       case 3:
         // BUS Spannung
@@ -217,7 +221,7 @@ void pulseCounter()
   pulseCount++;
 }
 
-float measureCurrent(byte analogPin) { // analogPin [0..8] 
+float measureCurrent(byte analogPin) { // analogPin [0..7] 
  long lNoSamples=0;
  long lCurrentSumSQ = 0;
  long lCurrentSum=0;
