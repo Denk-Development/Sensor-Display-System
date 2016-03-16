@@ -13,6 +13,8 @@
 
 #define dataLink Serial1 // RX: 0; TX: 1
 
+#define batteryVoltagePin A0
+
 // display
 #define TFT_DC 9
 #define TFT_CS 10
@@ -174,8 +176,13 @@ void loop() {
       if (i == 10) {
         tft.setFont(Arial_8);
       }
+      
       float * sensorValue = (float *) & data[i * bytesPerSensor];
       float val = * sensorValue;
+      
+      if (i == 12) { // battery voltage
+        val = map((float)analogRead(batteryVoltagePin), 0, 1024, 0, 4.2);
+      }
       
       logFile.print(",");
       logFile.print(val);
