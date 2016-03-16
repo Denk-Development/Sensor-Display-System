@@ -1,24 +1,21 @@
-#include <SoftwareSerial.h>
 #include <Wire.h>
 #include <Adafruit_MCP9808.h>
 #include <Adafruit_HTU21DF.h>
 
 // pinning
-// Serial TX Pin 0
-// Serial RX Pin 1
-#define flowSensorPin 2
-#define dataLinkRX 3
-#define dataLinkTX 4
+#define flowSensorPin 2 // interrupt pin
+#define dataLinkRX 0 // constant (Serial1)
+#define dataLinkTX 1 // constant (Serial1)
 
 #define currentPhase1Pin A0
 #define currentPhase2Pin A1
 #define currentPhase3Pin A2
 #define flowCurrrentPin A5
-#define busVoltagePin A5 // <-- not assigned
-
-#define flowSensorInterrupt 0  // 0 = digital pin 2
+#define busVoltagePin A6
 
 #define transmissionInterval 300
+
+#define dataLink Serial1
 
 const byte numberOfSensors = 13, bytesPerSensor = 4;
 
@@ -27,8 +24,6 @@ byte * data, * sensorValue;
 int dataLength;
 
 unsigned long lastTransmission = 0;
-
-SoftwareSerial dataLink(dataLinkRX, dataLinkTX); // RX, TX
 
 // sensors
 Adafruit_MCP9808 tempsensor1 = Adafruit_MCP9808();
@@ -56,7 +51,9 @@ unsigned long oldTimeFlowSensor;
 // end flow sensor
 
 void setup() {
-  dataLink.begin(57600);
+  Serial.begin(9600);
+  
+  dataLink.begin(58824);
   // baud rates 300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 31250, 38400, 57600, 115200
     
   dataLength = numberOfSensors * bytesPerSensor;
@@ -89,7 +86,7 @@ void setup() {
   // The Hall-effect sensor is connected to pin 2 which uses interrupt 0.
   // Configured to trigger on a FALLING state change (transition from HIGH
   // state to LOW state)
-  attachInterrupt(flowSensorInterrupt, pulseCounter, FALLING);
+  attachInterrupt(flowSensorPin, pulseCounter, FALLING);
 }
 
 void loop() {
@@ -97,13 +94,14 @@ void loop() {
     lastTransmission = millis();
     // data has changed
     dataLink.write(data, dataLength);
+    Serial.println("data transmitted");
   }
   
   if((millis() - oldTimeFlowSensor) > 1000)    // Only process counters once per second
   { 
     // Disable the interrupt while calculating flow rate and sending the value to
     // the host
-    detachInterrupt(flowSensorInterrupt);
+    detachInterrupt(flowSensorPin);
         
     // Because this loop may not complete in exactly 1 second intervals we calculate
     // the number of milliseconds that have passed since the last execution and use
@@ -133,7 +131,7 @@ void loop() {
     pulseCount = 0;
     
     // Enable the interrupt again now that we've finished sending output
-    attachInterrupt(flowSensorInterrupt, pulseCounter, FALLING);
+    attachInterrupt(flowSensorPin, pulseCounter, FALLING);
   }
 }
 
@@ -212,17 +210,20 @@ boolean readSensorData() {
   return changeDetected;
 }
 
-/*
-Interrupt Service Routine Flow Sensor
- */
+
+// Interrupt Service Routine Flow Sensor
 void pulseCounter()
 {
+  cli();
   // Increment the pulse counter
   pulseCount++;
+  sei();
 }
 
 float measureCurrent(byte analogPin) { // analogPin [0..7] 
- long lNoSamples=0;
+return (float)analogPin;
+}
+/* long lNoSamples=0;
  long lCurrentSumSQ = 0;
  long lCurrentSum=0;
 
@@ -274,4 +275,4 @@ float measureCurrent(byte analogPin) { // analogPin [0..7]
     return fCurrentRMS;
   }
   return 0;
-}
+}*/
