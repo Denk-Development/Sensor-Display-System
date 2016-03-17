@@ -221,9 +221,7 @@ void pulseCounter()
 }
 
 float measureCurrent(byte analogPin) { // analogPin [0..7] 
-return (float)analogPin;
-}
-/* long lNoSamples=0;
+ long lNoSamples=0;
  long lCurrentSumSQ = 0;
  long lCurrentSum=0;
 
@@ -275,4 +273,4 @@ return (float)analogPin;
     return fCurrentRMS;
   }
   return 0;
-}*/
+}
