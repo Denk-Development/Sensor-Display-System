@@ -10,25 +10,11 @@
 #define dataLinkRX 3
 #define dataLinkTX 4
 
-
-
-// analog multiplexer control signals
-#define analogMuxS0 5
-#define analogMuxS1 6
-#define analogMuxS2 7
-
-// analog multiplexer enable signal
-#define analogMuxE 8
-
-// analog multiplexer data
-#define analogMuxData A5
-
-
 #define currentPhase1Pin A0
 #define currentPhase2Pin A1
 #define currentPhase3Pin A2
-#define flowCurrrentPin 0 // analog mux pin
-#define busVoltagePin 1 // analog mux pin
+// #define flowCurrrentPin A5 
+#define busVoltagePin A5
 
 #define flowSensorInterrupt 0  // 0 = digital pin 2
 
@@ -172,11 +158,11 @@ boolean readSensorData() {
         break;
       case 3:
         // BUS Spannung
-        sensorValue = (float)read4051AnalogPin(busVoltagePin);
+        sensorValue = (float)analogRead(busVoltagePin);
         break;
       case 4:
         // Current Primary
-        sensorValue = (float)read4051AnalogPin(flowCurrrentPin);
+        sensorValue = 0; // (float)analogRead(flowCurrrentPin);
         break;
       case 5:
         // Temp PFC
@@ -288,23 +274,4 @@ float measureCurrent(byte analogPin) { // analogPin [0..7]
     return fCurrentRMS;
   }
   return 0;
-}
-
-int read4051AnalogPin(int pin) {
-  // select multiplexer input
-  digitalWrite(analogMuxS0, pin & 1);
-  digitalWrite(analogMuxS1, pin & 2 >> 1);
-  digitalWrite(analogMuxS2, pin & 4 >> 2);	
-  
-  // enable 
-  digitalWrite(analogMuxE, LOW);
-  delayMicroseconds(5);
-  
-  // read value
-  int val = analogRead(analogMuxData);
-  
-  // disable
-  digitalWrite(analogMuxE, HIGH);
-  
-  return val;
 }
