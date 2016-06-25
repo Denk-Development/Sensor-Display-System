@@ -47,6 +47,10 @@ int dataLength, bytesAvailable, bytesAvailableAfterDelay;
 
 long numberOfBytesAvailableLastTime = 0;
 
+// battery voltage
+int vout = 0, vin = 0;
+float R1 = 47000.0, R2 = 4700.0;
+
 // display object
 ILI9341_t3 tft = ILI9341_t3(TFT_CS, TFT_DC);
 
@@ -55,6 +59,7 @@ String sensorUnits[numberOfSensors] = { "A", "A", "A", "V", "A", "C", "C", "C", 
 byte sensorLineOffset[numberOfSensors] = { 0, 0, 0, offsetPerHr, offsetPerHr, 2 * offsetPerHr, 2 * offsetPerHr, 2 * offsetPerHr, 3 * offsetPerHr, 3 * offsetPerHr, 6 * offsetPerHr, 6 * offsetPerHr, 6 * offsetPerHr };
 
 void setup() {
+  pinMode(batteryVoltagePin, INPUT);
   Serial.begin(9600);
   
   // start tft
@@ -181,7 +186,7 @@ void loop() {
       float val = * sensorValue;
       
       if (i == 12) { // battery voltage
-        val = map((float)analogRead(batteryVoltagePin), 0, 1024, 0, 4.2);
+        val = getBatteryVoltage();
       }
       
       logFile.print(",");
@@ -285,6 +290,25 @@ String addLeadingZeros(int x, int digits) {
     str = '0' + str;
   }
   return str;
+}
+
+// battery voltage
+long readVcc() {
+  long result;
+  ADMUX = _BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
+  delay(2);
+  ADCSRA |= _BV(ADSC);
+  while (bit_is_set(ADCSRA,ADSC));
+  result = ADCL;
+  result |= ADCH<<8;
+  result = 1126400L / result;
+  return result;
+}
+
+int getBatteryVoltage() {
+  vout = (analogRead(batteryVoltagePin) * readVcc() / 1000) / 1024.0;
+  vin = vout / (R2/(R1+R2));
+  return vin;
 }
 
 
